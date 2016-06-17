@@ -1,116 +1,138 @@
 package com.example.rapper.helloworld;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import android.graphics.LinearGradient;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.view.View;
-import android.support.design.widget.NavigationView;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.LinearLayout;
-import android.widget.PopupMenu;
-import android.widget.Toast;
+import android.widget.ListView;
+import android.widget.PopupWindow;
+import android.widget.TextView;
+import android.app.Activity;
+import android.graphics.Color;
 
-public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends Activity {
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+	String TAG = "MainActivity.java";
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+	String popUpContents[];
+	PopupWindow popupWindowDogs;
+	LinearLayout buttonShowDropDown;
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.setDrawerListener(toggle);
-        toggle.syncState();
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_main);
 
-        final LinearLayout linearLayout = (LinearLayout)findViewById(R.id.mycanvas);
-        linearLayout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(MainActivity.this, "pipoca", Toast.LENGTH_SHORT).show();
-                PopupMenu pop = new PopupMenu(MainActivity.this,linearLayout);
-                pop.getMenuInflater().inflate(R.menu.main,pop.getMenu());
-                pop.show();
-            }
-        });
+		/*
+		 * initialize pop up window items list
+		 */
 
-    }
+		// add items on the array dynamically
+		// format is DogName::DogID
+		List<String> dogsList = new ArrayList<String>();
+		dogsList.add("Akita Inu::1");
+		dogsList.add("Alaskan Klee Kai::2");
+		dogsList.add("Papillon::3");
+		dogsList.add("Tibetan Spaniel::4");
 
-    @Override
-    public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
-        } else {
-            super.onBackPressed();
-        }
-    }
+		// convert to simple array
+		popUpContents = new String[dogsList.size()];
+		dogsList.toArray(popUpContents);
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
+		/*
+		 * initialize pop up window
+		 */
+		popupWindowDogs = popupWindowDogs();
+		popupWindowDogs.setAnimationStyle(R.style.animationName);
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+		/*
+		 * button on click listener
+		 */
+		View.OnClickListener handler = new View.OnClickListener() {
+			public void onClick(View v) {
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
+				switch (v.getId()) {
 
-        return super.onOptionsItemSelected(item);
-    }
+				case R.id.buttonShowDropDown:
+					// show the list view as dropdown
 
-    @SuppressWarnings("StatementWithEmptyBody")
-    @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
-        // Handle navigation view item clicks here.
-        int id = item.getItemId();
+					popupWindowDogs.showAsDropDown(v, -5, 0);
+					break;
+				}
+			}
+		};
 
-        if (id == R.id.nav_camera) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
+		// our button
+		buttonShowDropDown = (LinearLayout) findViewById(R.id.buttonShowDropDown);
+		buttonShowDropDown.setOnClickListener(handler);
+	}
 
-        } else if (id == R.id.nav_slideshow) {
+	/*
+	 *
+	 */
+	public PopupWindow popupWindowDogs() {
 
-        } else if (id == R.id.nav_manage) {
+		// initialize a pop up window type
+		PopupWindow popupWindow = new PopupWindow(this);
 
-        } else if (id == R.id.nav_share) {
+		// the drop down list is a list view
+		ListView listViewDogs = new ListView(this);
 
-        } else if (id == R.id.nav_send) {
+		// set our adapter and pass our pop up window contents
+		listViewDogs.setAdapter(dogsAdapter(popUpContents));
 
-        }
+		// set the item click listener
+		listViewDogs.setOnItemClickListener(new DogsDropdownOnItemClickListener());
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
-        return true;
-    }
+		// some other visual settings
+		popupWindow.setFocusable(true);
+
+		popupWindow.setWidth(WindowManager.LayoutParams.MATCH_PARENT);
+		popupWindow.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
+
+		// set the list view as pop up window content
+		popupWindow.setContentView(listViewDogs);
+
+		return popupWindow;
+	}
+
+	/*
+	 * adapter where the list values will be set
+	 */
+	private ArrayAdapter<String> dogsAdapter(String dogsArray[]) {
+
+		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, dogsArray) {
+
+			@Override
+			public View getView(int position, View convertView, ViewGroup parent) {
+
+				// setting the ID and text for every items in the list
+				String item = getItem(position);
+				String[] itemArr = item.split("::");
+				String text = itemArr[0];
+				String id = itemArr[1];
+
+				// visual settings for the list item
+				TextView listItem = new TextView(MainActivity.this);
+
+				listItem.setText(text);
+				listItem.setTag(id);
+				listItem.setTextSize(22);
+				listItem.setPadding(10, 10, 10, 10);
+				listItem.setTextColor(Color.WHITE);
+
+				return listItem;
+			}
+		};
+
+		return adapter;
+	}
 }
